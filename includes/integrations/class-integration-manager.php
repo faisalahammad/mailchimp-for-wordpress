@@ -31,8 +31,28 @@ class MC4WP_Integration_Manager
     public function add_hooks()
     {
         add_action('after_setup_theme', [ $this, 'initialize' ]);
+        add_action('mc4wp_integration_subscribe', [ $this, 'process_subscribe' ]);
 
         $this->tags->add_hooks();
+    }
+
+    /**
+     * Process background subscription
+     *
+     * @param array $args
+     */
+    public function process_subscribe( $args )
+    {
+        if ( empty( $args['integration_slug'] ) ) {
+            return;
+        }
+
+        try {
+            $integration = $this->get( $args['integration_slug'] );
+            $integration->process_background_subscribe( $args );
+        } catch ( Exception $e ) {
+            // Integration not found
+        }
     }
 
 

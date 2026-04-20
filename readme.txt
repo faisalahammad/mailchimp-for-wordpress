@@ -4,7 +4,7 @@ Donate link: https://www.mc4wp.com/contribute/#utm_source=wp-plugin-repo&utm_med
 Tags: mailchimp, subscribe, email, newsletter, form
 Requires at least: 4.6
 Tested up to: 6.9.1
-Stable tag: 4.12.1
+Stable tag: 4.12.2
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -188,6 +188,14 @@ The plugin provides various filter and action hooks that allow you to modify or 
 
 == Changelog ==
 
+
+#### 4.12.2 - Apr 20, 2026
+
+- Add Mailchimp Campaign Archive block and [mc4wp_campaigns] shortcode to show an archive Mailchimp email campaigns. Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
+- WooCommerce: Allow "after email" position for sign-up checkbox when using Checkout Block.
+- WooCommerce: Detect use of Checkout Block and only show available positions.
+- Show warning when cron is behind schedule. Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
+- Add preliminary support for [Mailchimp Site Tracking Pixel](https://mailchimp.com/help/about-mailchimp-site-tracking-pixel/). Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
 
 
 #### 4.12.1 - Mar 26, 2026
@@ -1120,22 +1128,7 @@ Please note that installing this update requires you to also update any add-ons 
 
 - Improved handling of large debug logs.
 - Improved error messages when writing exceptions to debug log.
-- Show notice when form is missing required Mailchimp fields.
-- Custom form integration now handles arrays with 1-level depth. Thanks to [Mardari Igor](https://github.com/GarryOne).
-- You can now use nested tags in your form code, eg `{data key="utm_source" default="{current_path}"}`
-
-**Additions**
-
-- Add `data-hide-if` attribute logic to forms. See [conditionally hide form fields](https://www.mc4wp.com/kb/conditional-fields-elements/). Thanks to [Kurt Zenisek](http://kurtzenisek.com/).
-- Add hooks for delayed BuddyPress sign-up. Thanks to [Christian Wach](https://profiles.wordpress.org/needle).
-
-
-#### 4.0.7 - October 25, 2016
-
-**Improvements**
-
-- Obfuscate all email addresses in debug log. Thanks [Sauli Lepola](https://twitter.com/SJLfi).
-- ...
+- Show notice when form is missing ...
 
 == Upgrade Notice ==
 

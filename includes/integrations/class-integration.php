@@ -416,19 +416,19 @@ abstract class MC4WP_Integration
          */
         $data = apply_filters("mc4wp_integration_{$this->slug}_data", $data, $related_object_id);
 
-        $args = array(
+        $args = [
             'integration_slug'  => $this->slug,
             'data'              => $data,
             'related_object_id' => $related_object_id,
             'list_ids'          => $list_ids,
             'ip_signup'         => mc4wp_get_request_ip_address(),
             'email_type'        => mc4wp_get_email_type(),
-        );
+        ];
 
-        if ( function_exists( 'as_enqueue_async_action' ) ) {
-            as_enqueue_async_action( 'mc4wp_integration_subscribe', array( $args ) );
+        if (function_exists('as_enqueue_async_action')) {
+            as_enqueue_async_action('mc4wp_integration_subscribe', [$args]);
         } else {
-            wp_schedule_single_event( time(), 'mc4wp_integration_subscribe', array( $args ) );
+            wp_schedule_single_event(time(), 'mc4wp_integration_subscribe', [$args]);
         }
 
         return true;

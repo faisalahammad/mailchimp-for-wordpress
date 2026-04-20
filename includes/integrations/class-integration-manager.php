@@ -41,16 +41,16 @@ class MC4WP_Integration_Manager
      *
      * @param array $args
      */
-    public function process_subscribe( $args )
+    public function process_subscribe($args)
     {
-        if ( empty( $args['integration_slug'] ) ) {
+        if (empty($args['integration_slug'])) {
             return;
         }
 
         try {
-            $integration = $this->get( $args['integration_slug'] );
-            $integration->process_background_subscribe( $args );
-        } catch ( Exception $e ) {
+            $integration = $this->get($args['integration_slug']);
+            $integration->process_background_subscribe($args);
+        } catch (Exception $e) {
             // Integration not found
         }
     }

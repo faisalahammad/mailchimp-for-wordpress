@@ -1,6 +1,14 @@
 Changelog
 =========
 
+#### 4.12.2 - Apr 20, 2026
+
+- Add Mailchimp Campaign Archive block and [mc4wp_campaigns] shortcode to show an archive Mailchimp email campaigns. Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
+- WooCommerce: Allow "after email" position for sign-up checkbox when using Checkout Block.
+- WooCommerce: Detect use of Checkout Block and only show available positions.
+- Show warning when cron is behind schedule. Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
+- Add preliminary support for [Mailchimp Site Tracking Pixel](https://mailchimp.com/help/about-mailchimp-site-tracking-pixel/). Thanks to [Faisal Ahammad](https://faisalahammad.com/)!
+
 
 #### 4.12.1 - Mar 26, 2026
 

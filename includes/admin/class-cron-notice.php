@@ -109,7 +109,7 @@ class MC4WP_Admin_Cron_Notice
             return false;
         }
 
-        // if the next scheduled time is more than 1 hour in the past, cron is behind
-        return $next_scheduled < (time() - HOUR_IN_SECONDS);
+        // if the next scheduled time is more than 25 hour in the past, cron is behind
+        return $next_scheduled < (time() - (25 * HOUR_IN_SECONDS));
     }
 }

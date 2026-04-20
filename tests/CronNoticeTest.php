@@ -51,7 +51,7 @@ class CronNoticeTest extends PHPUnit\Framework\TestCase
     {
         global $mock_wp_next_scheduled;
         // 2 hours ago — well past the threshold
-        $mock_wp_next_scheduled = time() - 7200;
+        $mock_wp_next_scheduled = time() - 90001;
 
         $this->assertTrue($this->notice->is_cron_behind_schedule());
     }
@@ -59,7 +59,7 @@ class CronNoticeTest extends PHPUnit\Framework\TestCase
     public function test_show_outputs_notice_when_behind_schedule(): void
     {
         global $mock_wp_next_scheduled;
-        $mock_wp_next_scheduled = time() - 7200;
+        $mock_wp_next_scheduled = time() - 90001;
 
         ob_start();
         $this->notice->show();
@@ -84,7 +84,7 @@ class CronNoticeTest extends PHPUnit\Framework\TestCase
     public function test_show_outputs_nothing_when_dismissed(): void
     {
         global $mock_wp_next_scheduled, $mock_user_meta;
-        $mock_wp_next_scheduled   = time() - 7200;
+        $mock_wp_next_scheduled   = time() - 90001;
         $mock_user_meta['1:_mc4wp_cron_notice_dismissed'] = 1;
 
         ob_start();
@@ -105,7 +105,7 @@ class CronNoticeTest extends PHPUnit\Framework\TestCase
     public function test_show_outputs_nothing_when_not_on_plugin_page(): void
     {
         global $mock_wp_next_scheduled;
-        $mock_wp_next_scheduled = time() - 7200;
+        $mock_wp_next_scheduled = time() - 90001;
 
         $tools = $this->createPartialMock(MC4WP_Admin_Tools::class, ['on_plugin_page', 'is_user_authorized']);
         $tools->method('on_plugin_page')->willReturn(false);
@@ -123,7 +123,7 @@ class CronNoticeTest extends PHPUnit\Framework\TestCase
     public function test_show_outputs_nothing_when_user_not_authorized(): void
     {
         global $mock_wp_next_scheduled;
-        $mock_wp_next_scheduled = time() - 7200;
+        $mock_wp_next_scheduled = time() - 90001;
 
         $tools = $this->createPartialMock(MC4WP_Admin_Tools::class, ['on_plugin_page', 'is_user_authorized']);
         $tools->method('on_plugin_page')->willReturn(true);

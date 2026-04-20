@@ -88,6 +88,19 @@ add_action('plugins_loaded', function () {
         }
     }
 
+    // Initialize tracking pixel on frontend
+    if (! is_admin()) {
+        $opts = mc4wp_get_options();
+        if (
+            ! empty($opts['tracking_pixel_enabled'])
+            && ! empty($opts['tracking_pixel_site_id'])
+            && ! MC4WP_Tracking_Pixel::is_premium_ecommerce_pixel_active()
+        ) {
+            $tracking_pixel = new MC4WP_Tracking_Pixel($opts['tracking_pixel_site_id']);
+            $tracking_pixel->add_hooks();
+        }
+    }
+
     // bootstrap integrations
     require __DIR__ . '/integrations/bootstrap.php';
 }, 8);

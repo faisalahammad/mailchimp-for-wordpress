@@ -390,15 +390,8 @@ abstract class MC4WP_Integration
      */
     protected function subscribe(array $data, $related_object_id = 0)
     {
-        $integration = $this;
-        $slug        = $this->slug;
-        $mailchimp   = new MC4WP_MailChimp();
         $log         = $this->get_log();
         $list_ids    = $this->get_lists();
-
-        /** @var null|MC4WP_MailChimp_Subscriber $subscriber */
-        $subscriber = null;
-        $result     = false;
 
         // validate lists
         if (empty($list_ids)) {
@@ -421,9 +414,48 @@ abstract class MC4WP_Integration
          * @param array $data
          * @param int $related_object_id
          */
-        $data = apply_filters("mc4wp_integration_{$slug}_data", $data, $related_object_id);
+        $data = apply_filters("mc4wp_integration_{$this->slug}_data", $data, $related_object_id);
 
-        $email_type = mc4wp_get_email_type();
+        $args = [
+            'integration_slug'  => $this->slug,
+            'data'              => $data,
+            'related_object_id' => $related_object_id,
+            'list_ids'          => $list_ids,
+            'ip_signup'         => mc4wp_get_request_ip_address(),
+            'email_type'        => mc4wp_get_email_type(),
+        ];
+
+        if (function_exists('as_enqueue_async_action')) {
+            as_enqueue_async_action('mc4wp_integration_subscribe', [$args]);
+        } else {
+            wp_schedule_single_event(time(), 'mc4wp_integration_subscribe', [$args]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Process background subscription
+     *
+     * @param array $args
+     * @return boolean
+     */
+    public function process_background_subscribe(array $args)
+    {
+        $data              = $args['data'];
+        $related_object_id = $args['related_object_id'];
+        $list_ids          = $args['list_ids'];
+        $email_type        = $args['email_type'];
+        $ip_signup         = $args['ip_signup'];
+
+        $integration = $this;
+        $slug        = $this->slug;
+        $mailchimp   = new MC4WP_MailChimp();
+        $log         = $this->get_log();
+
+        /** @var null|MC4WP_MailChimp_Subscriber $subscriber */
+        $subscriber = null;
+        $result     = false;
 
         $mapper = new MC4WP_List_Data_Mapper($data, $list_ids);
 
@@ -433,7 +465,7 @@ abstract class MC4WP_Integration
         foreach ($map as $list_id => $subscriber) {
             $subscriber->status     = $this->options['double_optin'] ? 'pending' : 'subscribed';
             $subscriber->email_type = $email_type;
-            $subscriber->ip_signup  = mc4wp_get_request_ip_address();
+            $subscriber->ip_signup  = $ip_signup;
 
             /** @ignore documented elsewhere */
             $subscriber = apply_filters('mc4wp_subscriber_data', $subscriber);

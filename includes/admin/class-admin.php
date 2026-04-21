@@ -250,12 +250,10 @@ class MC4WP_Admin
 
         // If the toggle was just switched on, trigger auto-connect to fetch/create the connected site
         if ($settings['tracking_pixel_enabled'] && empty($settings['tracking_pixel_site_id'])) {
-            $success = MC4WP_Tracking_Pixel::fetch_or_create_connected_site();
-            if ($success) {
-                // Re-read options as fetch_or_create_connected_site() updates them
-                $refreshed = mc4wp_get_options();
-                $settings['tracking_pixel_site_id']   = $refreshed['tracking_pixel_site_id'];
-                $settings['tracking_pixel_script_url'] = $refreshed['tracking_pixel_script_url'];
+            $result = MC4WP_Tracking_Pixel::fetch_or_create_connected_site();
+            if ($result !== false) {
+                $settings['tracking_pixel_site_id']   = $result['site_id'];
+                $settings['tracking_pixel_script_url'] = $result['script_url'];
             } else {
                 $this->messages->flash(esc_html__('Could not automatically connect your site to Mailchimp. Please check your API key and try again.', 'mailchimp-for-wp'), 'error');
                 $settings['tracking_pixel_enabled'] = false;
@@ -487,8 +485,13 @@ class MC4WP_Admin
      */
     public function connect_tracking_pixel()
     {
-        $success = MC4WP_Tracking_Pixel::fetch_or_create_connected_site();
-        if ($success) {
+        $result = MC4WP_Tracking_Pixel::fetch_or_create_connected_site();
+        if ($result !== false) {
+            $opts = mc4wp_get_options();
+            $opts['tracking_pixel_enabled']    = true;
+            $opts['tracking_pixel_site_id']    = $result['site_id'];
+            $opts['tracking_pixel_script_url'] = $result['script_url'];
+            update_option('mc4wp', $opts);
             $this->messages->flash(esc_html__('Site tracking pixel successfully connected.', 'mailchimp-for-wp'));
         } else {
             $this->messages->flash(esc_html__('Could not connect site tracking pixel. Please check your API key and try again.', 'mailchimp-for-wp'), 'error');

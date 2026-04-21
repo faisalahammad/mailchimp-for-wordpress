@@ -54,6 +54,11 @@ class MC4WP_Tracking_Pixel
         $opts = mc4wp_get_options();
         $url  = $opts['tracking_pixel_script_url'] ?? '';
 
+        // BC: support legacy tracking_pixel_id for users who configured it before this auto-connect feature
+        if (empty($url) && ! empty($opts['tracking_pixel_id'])) {
+            $url = sprintf('https://chimpstatic.com/mcjs-connected/js/users/%s.js', $opts['tracking_pixel_id']);
+        }
+
         if (empty($url)) {
             return;
         }
@@ -107,13 +112,11 @@ class MC4WP_Tracking_Pixel
      * Auto-fetch an existing Mailchimp Connected Site that matches the current domain,
      * or create a new one if none is found.
      *
-     * Saves 'tracking_pixel_site_id' and 'tracking_pixel_script_url' into the mc4wp options.
-     *
      * @since 4.13.0
      *
-     * @return bool  True on success, false on failure.
+     * @return array{site_id: string, script_url: string}|false  Array with site data on success, false on failure.
      */
-    public static function fetch_or_create_connected_site(): bool
+    public static function fetch_or_create_connected_site()
     {
         try {
             /** @var MC4WP_API_V3 $api */
@@ -141,21 +144,12 @@ class MC4WP_Tracking_Pixel
                 ]);
             }
 
-            // Persist the site ID and script URL into plugin options.
-            $site_id    = $matched_site->foreign_id ?? $matched_site->id ?? '';
-            $script_url = $matched_site->site_script->url ?? '';
-
-            $opts = mc4wp_get_options();
-            $opts['tracking_pixel_site_id']   = sanitize_text_field($site_id);
-            $opts['tracking_pixel_script_url'] = esc_url_raw($script_url);
-            update_option('mc4wp', $opts);
-
-            return true;
+            return [
+                'site_id'    => sanitize_text_field($matched_site->foreign_id ?? $matched_site->id ?? ''),
+                'script_url' => esc_url_raw($matched_site->site_script->url ?? ''),
+            ];
         } catch (Exception $e) {
-            // Log but don't crash.
-            if (function_exists('mc4wp')) {
-                mc4wp('log')->error(sprintf('Tracking Pixel: error fetching/creating connected site. %s', $e->getMessage()));
-            }
+            mc4wp('log')->error(sprintf('Tracking Pixel: error fetching/creating connected site. %s', $e->getMessage()));
             return false;
         }
     }

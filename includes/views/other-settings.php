@@ -87,7 +87,7 @@ defined('ABSPATH') or exit;
                                         <strong><?php echo esc_html__('Connected Site ID:', 'mailchimp-for-wp'); ?></strong>
                                         <code><?php echo esc_html($opts['tracking_pixel_site_id']); ?></code>
                                         &nbsp;&mdash;&nbsp;
-                                        <a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['_mc4wp_action' => 'connect_tracking_pixel', '_redirect_to' => remove_query_arg('_mc4wp_action')]), '_mc4wp_action')); ?>"><?php echo esc_html__('Re-connect', 'mailchimp-for-wp'); ?></a>
+                                        <a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['_mc4wp_action' => 'connect_tracking_pixel']), '_mc4wp_action')); ?>"><?php echo esc_html__('Re-connect', 'mailchimp-for-wp'); ?></a>
                                     </p>
                                 <?php endif; ?>
                             </td>

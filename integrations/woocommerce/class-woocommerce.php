@@ -73,6 +73,11 @@ class MC4WP_WooCommerce_Integration extends MC4WP_Integration
                 return '1';
             });
         }
+
+        if (! empty($this->options['sync_coupons'])) {
+            require_once __DIR__ . '/class-coupon-sync.php';
+            new MC4WP_WooCommerce_Coupon_Sync();
+        }
     }
 
     /**
@@ -83,7 +88,8 @@ class MC4WP_WooCommerce_Integration extends MC4WP_Integration
     protected function get_default_options()
     {
         $defaults             = parent::get_default_options();
-        $defaults['position'] = 'billing';
+        $defaults['position']     = 'billing';
+        $defaults['sync_coupons'] = 0;
         return $defaults;
     }
 

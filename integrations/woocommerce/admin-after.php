@@ -48,5 +48,17 @@ $config = [
                 <p class="description"><?php esc_html_e('Select the location where you would like to show the sign-up checkbox. Note that only works if not using WooCommerce Checkout Block.', 'mailchimp-for-wp'); ?></p>
             </td>
         </tr>
+        <tr valign="top">
+            <th scope="row">
+                <?php _e('Sync Coupons', 'mailchimp-for-wp'); ?>
+            </th>
+            <td>
+                <label>
+                    <input type="checkbox" name="mc4wp_integrations[<?php echo $integration->slug; ?>][sync_coupons]" value="1" <?php checked($opts['sync_coupons'], 1); ?> />
+                    <?php _e('Automatically sync WooCommerce coupons to Mailchimp as Promo Rules.', 'mailchimp-for-wp'); ?>
+                </label>
+                <p class="description"><?php _e('This allows you to use your coupons in Mailchimp abandoned cart journeys and other automated emails.', 'mailchimp-for-wp'); ?></p>
+            </td>
+        </tr>
     </tbody>
 </table>

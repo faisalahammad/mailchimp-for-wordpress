@@ -19,6 +19,16 @@ class MC4WP_Form_Asset_Manager
     private $load_typo_checker = false;
 
     /**
+     * @var bool Flag to determine whether AJAX form script should be enqueued.
+     */
+    private $load_ajax = false;
+
+    /**
+     * @var string Error text from first AJAX-enabled form, used as fallback in JavaScript.
+     */
+    private $ajax_error_text = '';
+
+    /**
      * Add hooks
      */
     public function add_hooks(): void
@@ -168,6 +178,12 @@ class MC4WP_Form_Asset_Manager
         $this->print_dummy_javascript();
         $this->load_scripts = true;
 
+        // check if this form has AJAX enabled (skip if premium AJAX module is active)
+        if (! empty($form->settings['ajax']) && ! $this->load_ajax && ! class_exists('MC4WP_AJAX_Forms')) {
+            $this->load_ajax = true;
+            $this->ajax_error_text = $form->get_message('error');
+        }
+
         // check if this form has typo checker enabled
         if (! empty($form->settings['email_typo_check'])) {
             $this->load_typo_checker = true;
@@ -228,6 +244,34 @@ class MC4WP_Form_Asset_Manager
         if ($submitted_form_data !== null) {
             wp_enqueue_script('mc4wp-forms-submitted', mc4wp_plugin_url('assets/js/forms-submitted.js'), [ 'mc4wp-forms-api' ], MC4WP_VERSION, true);
             wp_localize_script('mc4wp-forms-submitted', 'mc4wp_submitted_form', $submitted_form_data);
+        }
+
+        // maybe load AJAX forms script
+        if ($this->load_ajax) {
+            // default loading character (bullet)
+            $character = '&bull;';
+
+            /**
+             * Filters the loading character used for AJAX form requests.
+             *
+             * @since 4.13.0
+             *
+             * @param string $character The loading character.
+             */
+            $loading_character = (string) apply_filters('mc4wp_forms_ajax_loading_character', $character);
+
+            wp_add_inline_script(
+                'mc4wp-forms-api',
+                sprintf(
+                    'window.mc4wp = window.mc4wp || {}; window.mc4wp.ajax = %s;',
+                    wp_json_encode([
+                        'loading_character' => $loading_character,
+                        'ajax_url'          => rest_url('mc4wp/v1/form'),
+                        'error_text'        => $this->ajax_error_text,
+                    ])
+                ),
+                'before'
+            );
         }
 
         // print inline scripts

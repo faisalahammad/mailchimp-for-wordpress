@@ -96,6 +96,12 @@ function sanitize_text_field($value)
 }
 
 /** @ignore */
+function esc_url_raw($url)
+{
+    return $url;
+}
+
+/** @ignore */
 function esc_html($value)
 {
     return htmlspecialchars($value);
@@ -111,7 +117,39 @@ function get_post_meta($id, $meta_key = '', $single = true)
 /** @ignore */
 function get_bloginfo($key)
 {
-    return '';
+    return $GLOBALS['mc4wp_test_bloginfo'][$key] ?? '';
+}
+
+/** @ignore */
+function get_home_url($blog_id = null, $path = '', $scheme = null)
+{
+    return $GLOBALS['mc4wp_test_home_url'] ?? 'https://example.com';
+}
+
+/** @ignore */
+function wp_parse_url($url, $component = -1)
+{
+    return parse_url($url, $component);
+}
+
+/** @ignore */
+function is_multisite()
+{
+    return ! empty($GLOBALS['mc4wp_test_multisite']);
+}
+
+/** @ignore */
+function get_current_blog_id()
+{
+    return $GLOBALS['mc4wp_test_blog_id'] ?? 1;
+}
+
+/** @ignore */
+function sanitize_title($title)
+{
+    $title = strtolower(trim($title));
+    $title = preg_replace('/[^a-z0-9\s-]/', '', $title);
+    return trim(preg_replace('/[\s-]+/', '-', $title), '-');
 }
 
 /** @ignore */

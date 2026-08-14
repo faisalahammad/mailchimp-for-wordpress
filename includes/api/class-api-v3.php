@@ -395,6 +395,23 @@ class MC4WP_API_V3
     }
 
     /**
+     * Get a single connected site by its foreign ID.
+     *
+     * @link https://mailchimp.com/developer/marketing/api/connected-sites/get-connected-site-info/
+     *
+     * @param string $site_id  The foreign_id the site was registered with.
+     * @param array  $args
+     *
+     * @return object
+     * @throws MC4WP_API_Resource_Not_Found_Exception|MC4WP_API_Exception
+     */
+    public function get_connected_site($site_id, array $args = [])
+    {
+        $resource = sprintf('/connected-sites/%s', $site_id);
+        return $this->client->get($resource, $args);
+    }
+
+    /**
      * Get all connected sites for the Mailchimp account.
      *
      * @link https://mailchimp.com/developer/marketing/api/connected-sites/get-connected-site/
@@ -406,6 +423,7 @@ class MC4WP_API_V3
      */
     public function get_connected_sites(array $args = [])
     {
+        $args = array_merge([ 'count' => 1000 ], $args);
         $data = $this->client->get('/connected-sites', $args);
 
         if (is_object($data) && isset($data->sites)) {

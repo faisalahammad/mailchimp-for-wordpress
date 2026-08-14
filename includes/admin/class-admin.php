@@ -259,9 +259,14 @@ class MC4WP_Admin
         // Sanitize tracking pixel enabled toggle
         $settings['tracking_pixel_enabled'] = ! empty($settings['tracking_pixel_enabled']);
 
-        // If the toggle was just switched on, trigger auto-connect to fetch/create the connected site
-        if ($settings['tracking_pixel_enabled'] && empty($settings['tracking_pixel_site_id'])) {
-            $result = MC4WP_Tracking_Pixel::fetch_or_create_connected_site();
+        // If the toggle was just switched on, trigger auto-connect to fetch/create the connected site.
+        // Also runs when only the script URL is missing, which is the case for sites that got their
+        // site ID from the e-commerce store settings without a script URL alongside it.
+        if ($settings['tracking_pixel_enabled'] && (empty($settings['tracking_pixel_site_id']) || empty($settings['tracking_pixel_script_url']))) {
+            // Pass the submitted key, because this runs before the new settings are stored and the API
+            // service still holds the key that is currently in the database. The constant wins as usual.
+            $api_key = defined('MC4WP_API_KEY') && constant('MC4WP_API_KEY') !== '' ? (string) MC4WP_API_KEY : $settings['api_key'];
+            $result  = MC4WP_Tracking_Pixel::fetch_or_create_connected_site($api_key);
             if ($result !== false) {
                 $settings['tracking_pixel_site_id']    = $result['site_id'];
                 $settings['tracking_pixel_script_url'] = $result['script_url'];

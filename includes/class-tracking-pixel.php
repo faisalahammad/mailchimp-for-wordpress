@@ -108,30 +108,50 @@ class MC4WP_Tracking_Pixel
      *
      * @since 4.13.0
      *
+     * @param string $api_key  API key to use. Defaults to the configured one, pass this explicitly when
+     *                         the key is about to change since the API service holds the stored key.
+     *
      * @return array{site_id: string, script_url: string}|false  Array with site data on success, false on failure.
      */
-    public static function fetch_or_create_connected_site()
+    public static function fetch_or_create_connected_site(string $api_key = '')
     {
         try {
             /** @var MC4WP_API_V3 $api */
-            $api    = mc4wp_get_service('api');
-            $domain = self::get_site_domain();
-            $sites  = $api->get_connected_sites();
-
-            // Try to find an existing site that matches our domain.
+            $api          = $api_key === '' ? mc4wp_get_service('api') : new MC4WP_API_V3($api_key);
+            $foreign_id   = self::get_foreign_id();
+            $domain       = self::get_site_domain();
             $matched_site = null;
-            foreach ($sites as $site) {
-                $site_domain = isset($site->domain) ? self::normalize_domain($site->domain) : '';
-                if ($site_domain === self::normalize_domain($domain)) {
+
+            // First, look the site up by its foreign_id directly. The e-commerce add-on registers a
+            // connected site using the store ID, so this normally hits on the first try.
+            try {
+                $site = $api->get_connected_site($foreign_id);
+
+                if (isset($site->domain) && self::normalize_domain($site->domain) === $domain) {
                     $matched_site = $site;
-                    break;
+                } else {
+                    // The ID belongs to a different domain, so using its script would track the wrong
+                    // site. Make the ID unique to this domain in case we end up registering below.
+                    $foreign_id .= '-' . substr(md5($domain), 0, 8);
+                }
+            } catch (MC4WP_API_Resource_Not_Found_Exception $e) {
+                // No connected site registered under this ID yet.
+            }
+
+            // Otherwise, look for an existing site registered under the same domain.
+            if (null === $matched_site) {
+                foreach ($api->get_connected_sites() as $site) {
+                    $site_domain = isset($site->domain) ? self::normalize_domain($site->domain) : '';
+                    if ('' !== $site_domain && $site_domain === $domain) {
+                        $matched_site = $site;
+                        break;
+                    }
                 }
             }
 
+            // Still nothing, so register a new connected site. Mailchimp rejects a second site for a
+            // domain that is already connected, which is why both lookups above run first.
             if (null === $matched_site) {
-                // No match — create a new connected site using the e-commerce store ID as foreign_id
-                // so it reuses any existing store connection where possible.
-                $foreign_id   = self::get_foreign_id();
                 $matched_site = $api->add_connected_site([
                     'foreign_id' => $foreign_id,
                     'domain'     => $domain,
@@ -143,31 +163,77 @@ class MC4WP_Tracking_Pixel
                 'script_url' => esc_url_raw($matched_site->site_script->url ?? ''),
             ];
         } catch (Exception $e) {
-            mc4wp_get_service('log')->error(sprintf('Tracking Pixel: error fetching/creating connected site. %s', $e->getMessage()));
+            // Cast the exception to string so Mailchimp's own error detail ends up in the log,
+            // instead of just the HTTP status message.
+            mc4wp_get_service('log')->error(sprintf('Tracking Pixel: error fetching/creating connected site. %s', (string) $e));
             return false;
         }
     }
 
     /**
-     * Returns the domain of the current site stripped of protocol.
+     * Returns the domain to register this site under in Mailchimp.
      *
      * @return string
      */
     public static function get_site_domain(): string
     {
-        return (string) self::normalize_domain(get_home_url());
+        $home_url = get_home_url();
+        $domain   = self::normalize_domain($home_url);
+        $path     = trim((string) wp_parse_url($home_url, PHP_URL_PATH), '/');
+
+        // Mailchimp strips the subdirectory part off a domain, which would make every site in a
+        // subdirectory network resolve to the same domain. Turn each path segment into a hostname
+        // label instead, deepest first, so /shop becomes shop.example.com like the e-commerce add-on
+        // registers it and a nested /network/shop becomes shop.network.example.com.
+        if ($path !== '' && is_multisite()) {
+            $labels = array_map([ __CLASS__, 'to_hostname_label' ], array_reverse(explode('/', $path)));
+            $labels = array_filter($labels);
+
+            if (! empty($labels)) {
+                $domain = implode('.', $labels) . '.' . $domain;
+            }
+        }
+
+        return $domain;
     }
 
     /**
-     * Strips protocol and trailing slashes from a URL/domain for comparison.
+     * Turns a single URL path segment into something usable as a hostname label.
+     *
+     * @param string $segment
+     * @return string
+     */
+    private static function to_hostname_label(string $segment): string
+    {
+        $label = strtolower(rawurldecode($segment));
+        $label = (string) preg_replace('/[^a-z0-9-]+/', '-', $label);
+        $label = trim((string) preg_replace('/-+/', '-', $label), '-');
+        return substr($label, 0, 63);
+    }
+
+    /**
+     * Reduces a URL or domain to the bare hostname Mailchimp stores it as, so that two spellings of
+     * the same site compare equal. Strips the protocol, port, path and the www. prefix.
      *
      * @param string $url
      * @return string
      */
     private static function normalize_domain(string $url): string
     {
-        $domain = str_ireplace(['https://', 'http://', '://'], '', trim($url));
-        return rtrim($domain, '/');
+        $url = trim($url);
+
+        // Add a scheme-relative prefix so the host is parsed as such for bare domains too.
+        if (strpos($url, '//') === false) {
+            $url = '//' . ltrim($url, '/');
+        }
+
+        $host = strtolower((string) wp_parse_url($url, PHP_URL_HOST));
+
+        if (strpos($host, 'www.') === 0) {
+            $host = substr($host, 4);
+        }
+
+        return $host;
     }
 
     /**
@@ -178,11 +244,25 @@ class MC4WP_Tracking_Pixel
      */
     private static function get_foreign_id(): string
     {
-        $ecommerce_settings = get_option('mc4wp_ecommerce', []);
-        if (! empty($ecommerce_settings['store_id'])) {
+        // Read through the add-on's own getter when available, because it fills in a default store ID
+        // at runtime that is not always written back to the option.
+        if (function_exists('mc4wp_ecommerce_get_settings')) {
+            $ecommerce_settings = mc4wp_ecommerce_get_settings();
+        } else {
+            $ecommerce_settings = get_option('mc4wp_ecommerce', []);
+        }
+
+        if (is_array($ecommerce_settings) && ! empty($ecommerce_settings['store_id'])) {
             return (string) $ecommerce_settings['store_id'];
         }
 
-        return 'mc4wp-' . sanitize_title(get_bloginfo('name')) . '-' . get_current_blog_id();
+        // sanitize_title() percent-encodes names without any latin characters, so strip anything
+        // that is not safe to use as an identifier.
+        $slug = substr((string) preg_replace('/[^a-z0-9-]/', '', sanitize_title(get_bloginfo('name'))), 0, 32);
+        if ($slug === '') {
+            $slug = 'site';
+        }
+
+        return 'mc4wp-' . $slug . '-' . get_current_blog_id();
     }
 }

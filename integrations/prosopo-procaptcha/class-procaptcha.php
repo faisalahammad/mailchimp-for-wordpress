@@ -164,11 +164,32 @@ class MC4WP_Procaptcha
                 }
 
                 setup() {
-                    this.validationErrorElement = this.querySelector('.mc4wp-procaptcha__validation-error')
+                    // Fall back to the enclosing form: some themes (or `wpautop`)
+                    // wrap the custom element in a `<p>`, and the HTML parser then
+                    // auto-closes that `<p>` before the child `<div>`, hoisting the
+                    // captcha container out to become a sibling. Without the
+                    // fallback the querySelector returns null and render() crashes.
+                    const form = this.closest('form');
+                    this.validationErrorElement =
+                        this.querySelector('.mc4wp-procaptcha__validation-error') ||
+                        (form && form.querySelector('.mc4wp-procaptcha__validation-error'));
+
                     attributes.callback = this.validatedCallback.bind(this);
 
-                    window.procaptcha.render(this.querySelector('.mc4wp-procaptcha__captcha'), attributes);
-                    this.closest('form').addEventListener('submit', this.maybePreventSubmission.bind(this));
+                    const captchaContainer =
+                        this.querySelector('.mc4wp-procaptcha__captcha') ||
+                        (form && form.querySelector('.mc4wp-procaptcha__captcha'));
+
+                    if (null === captchaContainer) {
+                        console.warn('[mc4wp-procaptcha] captcha container not found; skipping render');
+                        return;
+                    }
+
+                    window.procaptcha.render(captchaContainer, attributes);
+
+                    if (null !== form) {
+                        form.addEventListener('submit', this.maybePreventSubmission.bind(this));
+                    }
                 }
             }
 
@@ -276,7 +297,8 @@ class MC4WP_Procaptcha
 
         $this->is_in_use = true;
 
-        $html  = '<mc4wp-procaptcha class="mc4wp-procaptcha" style="display: block;">';
+        // inline-block lets the parent form's text-align propagate to the widget.
+        $html  = '<mc4wp-procaptcha class="mc4wp-procaptcha" style="display: inline-block;">';
         $html .= '<div class="mc4wp-procaptcha__captcha"></div>';
 
         // The element is optional, e.g. should be missing on the settings page.

@@ -73,16 +73,17 @@ abstract class MC4WP_Integration
     protected function get_default_options()
     {
         return [
-            'css'               => 0,
-            'double_optin'      => 1,
-            'enabled'           => 0,
-            'implicit'          => 0,
-            'label'             => __('Sign me up for the newsletter!', 'mailchimp-for-wp'),
-            'lists'             => [],
-            'precheck'          => 0,
-            'replace_interests' => 0,
-            'update_existing'   => 0,
-            'wrap_p'            => 1,
+            'css'                      => 0,
+            'double_optin'             => 1,
+            'enabled'                  => 0,
+            'implicit'                 => 0,
+            'label'                    => __('Sign me up for the newsletter!', 'mailchimp-for-wp'),
+            'lists'                    => [],
+            'precheck'                 => 0,
+            'replace_interests'        => 0,
+            'update_existing'          => 0,
+            'update_only_empty_fields' => 0,
+            'wrap_p'                   => 1,
         ];
     }
 
@@ -430,9 +431,10 @@ abstract class MC4WP_Integration
             'ip_signup'         => mc4wp_get_request_ip_address(),
             'email_type'        => mc4wp_get_email_type(),
             'options'           => [
-                'double_optin'      => $this->options['double_optin'],
-                'update_existing'   => $this->options['update_existing'],
-                'replace_interests' => $this->options['replace_interests'],
+                'double_optin'            => $this->options['double_optin'],
+                'update_existing'         => $this->options['update_existing'],
+                'update_only_empty_fields' => $this->options['update_only_empty_fields'],
+                'replace_interests'       => $this->options['replace_interests'],
             ],
         ];
 
@@ -512,7 +514,7 @@ abstract class MC4WP_Integration
                 continue;
             }
 
-            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $options['update_existing'], $options['replace_interests']);
+            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $options['update_existing'], $options['replace_interests'], $options['update_only_empty_fields']);
         }
 
         // if result failed, show error message

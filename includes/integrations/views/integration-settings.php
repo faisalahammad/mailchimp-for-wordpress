@@ -267,6 +267,31 @@
                     ?>
 
                     <?php
+                    if ($integration->has_ui_element('update_only_empty_fields')) {
+                        $config = [
+                            'element' => 'mc4wp_integrations[' . $integration->slug . '][update_existing]',
+                            'value'   => 1,
+                        ];
+                        ?>
+                        <tr valign="top" data-showif="<?php echo esc_attr(json_encode($config)); ?>">
+                            <th scope="row"><?php echo esc_html__('Update only empty fields?', 'mailchimp-for-wp'); ?></th>
+                            <td class="nowrap">
+                                <label>
+                                    <input type="radio" name="mc4wp_integrations[<?php echo esc_attr($integration->slug); ?>][update_only_empty_fields]" value="1" <?php checked($opts['update_only_empty_fields'], 1); ?> />&rlm;
+                                    <?php echo esc_html__('Yes', 'mailchimp-for-wp'); ?>
+                                </label> &nbsp;
+                                <label>
+                                    <input type="radio" name="mc4wp_integrations[<?php echo esc_attr($integration->slug); ?>][update_only_empty_fields]" value="0" <?php checked($opts['update_only_empty_fields'], 0); ?> />&rlm;
+                                    <?php echo esc_html__('No', 'mailchimp-for-wp'); ?>
+                                </label>
+                                <p class="description"><?php echo esc_html__('Select "yes" to keep existing Mailchimp values and only fill blank fields when updating a subscriber.', 'mailchimp-for-wp'); ?></p>
+                            </td>
+                        </tr>
+                        <?php
+                    } // end if UI update_only_empty_fields
+                    ?>
+
+                    <?php
                     if ($integration->has_ui_element('replace_interests')) {
                         $config = [
                             'element' => 'mc4wp_integrations[' . $integration->slug . '][update_existing]',

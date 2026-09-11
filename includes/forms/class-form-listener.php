@@ -121,7 +121,7 @@ class MC4WP_Form_Listener
             }
 
             // send a subscribe request to Mailchimp for each list
-            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $form->settings['update_existing'], $form->settings['replace_interests']);
+            $result = $mailchimp->list_subscribe($list_id, $subscriber->email_address, $subscriber->to_array(), $form->settings['update_existing'], $form->settings['replace_interests'], $form->settings['update_only_empty_fields']);
         }
 
         $log = $this->get_log();

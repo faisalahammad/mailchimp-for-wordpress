@@ -14,7 +14,7 @@ function myprefix_filter_mc4wp_lists($lists)
     $list_id_english_list = '456defabc123';
 
     if (defined('ICL_LANGUAGE_CODE')) {
-        switch (ICL_LANGUAGE_CODE) {
+        switch (substr(ICL_LANGUAGE_CODE, 0, 2)) {
             // spanish
             case 'es':
                 $lists = [ $list_id_spanish_list ];

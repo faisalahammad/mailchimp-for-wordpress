@@ -22,6 +22,7 @@ class IntegrationTest extends TestCase
         ]);
 
         self::assertEquals($slug, $instance->slug);
+        self::assertSame(0, $instance->options['update_only_empty_fields']);
     }
 
     /**
@@ -52,10 +53,11 @@ class IntegrationTest extends TestCase
         $mock_scheduled_events = [];
 
         $instance = new class ('my-integration', [
-            'double_optin'      => 0,
-            'update_existing'   => 1,
-            'replace_interests' => 1,
-            'lists'             => [ 'abc123' ],
+            'double_optin'           => 0,
+            'update_existing'        => 1,
+            'update_only_empty_fields' => 1,
+            'replace_interests'      => 1,
+            'lists'                  => [ 'abc123' ],
         ]) extends MC4WP_Sample_Integration {
             public function subscribe_public(array $data, $related_object_id = 0)
             {
@@ -91,6 +93,7 @@ class IntegrationTest extends TestCase
         self::assertEquals([ 'abc123' ], $args['list_ids']);
         self::assertSame(0, $args['options']['double_optin']);
         self::assertSame(1, $args['options']['update_existing']);
+        self::assertSame(1, $args['options']['update_only_empty_fields']);
         self::assertSame(1, $args['options']['replace_interests']);
     }
 }

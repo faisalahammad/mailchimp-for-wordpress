@@ -129,6 +129,6 @@ class MC4WP_Custom_Integration extends MC4WP_Integration
      */
     public function get_ui_elements()
     {
-        return [ 'lists', 'double_optin', 'update_existing', 'replace_interests' ];
+        return [ 'lists', 'double_optin', 'update_existing', 'update_only_empty_fields', 'replace_interests' ];
     }
 }

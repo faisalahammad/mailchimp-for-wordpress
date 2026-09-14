@@ -42,6 +42,7 @@ class FormTest extends TestCase
 
         // settings & messages should be loaded
         self::assertNotEmpty($form->settings);
+        self::assertSame(0, $form->settings['update_only_empty_fields']);
 
         // default form action should be "subscribe
         self::assertEquals('subscribe', $form->config['action']);

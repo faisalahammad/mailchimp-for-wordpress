@@ -33,9 +33,15 @@ class MC4WP_Form_Listener
         try {
             $form_id = (int) $form_data['_mc4wp_form_id'];
             $form    = mc4wp_get_form($form_id);
+
+            // only accept submissions on published forms
+            if ($form->status !== 'publish') {
+                return;
+            }
         } catch (Exception $e) {
             return;
         }
+
 
         // sanitize request data
         $request_data = mc4wp_sanitize_deep($form_data);
